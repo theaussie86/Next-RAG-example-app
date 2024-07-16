@@ -7,6 +7,7 @@ import { MongoDBAtlasVectorSearch } from "@langchain/community/vectorstores/mong
 import { CharacterTextSplitter } from "langchain/text_splitter";
 import path from "path";
 import { client, collectionName, dbName } from "@/utils/db";
+import { get } from "http";
 
 export async function POST(req: NextRequest) {
   try {
@@ -28,19 +29,38 @@ export async function POST(req: NextRequest) {
     });
     const blob = await response.blob();
 
-    const tempFilePath = path.join(process.cwd(), `cv.pdf`);
+    // Get the file name
+    const contentMeta = response.headers.get("content-disposition")?.split(";");
+    const fileName = contentMeta
+      ?.find((c) => c.includes("filename="))
+      ?.split("=")[1]
+      .replace(/"/g, "");
+    const tempFileName = fileName ?? "temp.pdf";
+    const tempFilePath = path.join(process.cwd(), tempFileName);
 
-    //
+    const currentFileName = await getCurrentFileName();
+
+    if (tempFileName === currentFileName) {
+      return NextResponse.json(
+        { message: "Already uploaded" },
+        { status: 200 }
+      );
+    }
+
+    // Set the current file name in the database
+    await setCurrentFileName(tempFileName);
+
+    // Delete old embeddings
+    await deleteOldEmbeddings();
+
+    // Save the file temporarily
     const fileBuffer = Buffer.from(await blob.arrayBuffer());
     await fs.writeFile(tempFilePath, fileBuffer);
 
+    // Read file content and extract text
     const dataBuffer = await fs.readFile(tempFilePath);
 
-    await deleteOldEmbeddings();
-
     await pdf(await dataBuffer).then(async function (data: { text: any }) {
-      console.log(data.text);
-
       // Spread data into chunks
       const chunks = await new CharacterTextSplitter({
         separator: "\n",
@@ -76,4 +96,21 @@ export async function POST(req: NextRequest) {
 
 async function deleteOldEmbeddings() {
   await client.db(dbName).collection(collectionName).deleteMany({});
+}
+
+async function getCurrentFileName() {
+  const config = await client.db(dbName).collection("config").findOne({});
+  return config?.fileName;
+}
+
+async function setCurrentFileName(fileName: string) {
+  await client.db(dbName).collection("config").updateOne(
+    {},
+    {
+      $set: {
+        fileName,
+      },
+    },
+    { upsert: true }
+  );
 }
