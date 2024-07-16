@@ -1,34 +1,49 @@
-import React from 'react'
-import NavBar from './component/navbar'
-
+import React from "react";
+import NavBar from "./component/navbar";
+import Link from "next/link";
 
 const Home = () => {
   return (
     <div>
       <NavBar />
-      <div className='overview-text'>
+      <div className="overview-text prose text-gray-300">
+        <h1 className="font-bold text-3xl text-gray-400">CV Chatbot</h1>
 
-        <h1 style={{ fontWeight: 'bold', fontSize: '2em' }}>RAG QnA Chatbot</h1>
-        <br />
-        
-        <p>With this RAG (Retrieval-Augmented Generation) application, you can quickly deploy a chatbot that is enhanced by your own data. By simply uploading any PDF file(s) of your choosing, you will be creating your own custom Questions and Answers (QnA) chatbot.</p>
-        <br />
+        <p>
+          Dies ist eine Beispiel Chat Anwendung. Sie dient als Prove of Concept
+          für eine RAG Anwendung. Sie nutzt KI um mit den eigenen Daten zu
+          interagieren.
+        </p>
 
-        <h2 style={{ fontStyle: 'italic' }}>Getting Started</h2>
-        <ul>
-          <li>Navigate to the &ldquo;Train&rdquo; tab above.</li>
-          <li>Here you can upload any number of PDF files you wish to ask the chatbot about, or that you wish the chatbot would consider when providing an answer.</li>
-          <li>After uploading your files, navigate to &ldquo;QnA&rdquo; tab.</li>
-          <li>In the prompt, you can now ask questions about the uploaded PDF files in natural language, and receive a response.</li>
-        </ul>
+        <h2 className="italic text-gray-400">Architektur</h2>
+        <ol>
+          <li>Frontend + Backend: Next.js</li>
+          <li>LLM: OpenAI&apos;s Chat API (GPT-3.5-Turbo)</li>
+          <li>Embeddings: MongoDB Atlas vector store</li>
+          <li>Request Augmented Retrieval: Lang Chain</li>
+        </ol>
 
-        <br />
-
-        <p>This application leverages MongoDB&apos;s robust vector store capabilities. Each uploaded PDF is embedded in a vectorized format into your MongoDB Atlas cluster. The vector store efficiently organizes and indexes data, streamlining the process of generating responses and insights from the RAG model.</p>
+        <p>
+          Als Beispiel habe ich meinen CV in MongoDB Atlas gespeichert. Dieser
+          kann hier direkt heruntergeladen werden.
+          <br />
+          <Link
+            href={
+              "https://docs.google.com/document/d/1ybGyvHxuJP4mBPh9NHnB9-kWMUIB9KLnMwgk9aSuUYw/export?format=pdf"
+            }
+          >
+            <button className="rounded bg-blue-600 px-2 py-1 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600">
+              Download CV
+            </button>
+          </Link>
+        </p>
+        <p>
+          Sobald es Änderungen an meinem CV gibt, wird automatisch ein Webhook
+          getriggert, der dann den neuen CV in die Datenbank speichert.
+        </p>
       </div>
     </div>
+  );
+};
 
-  )
-}
-
-export default Home
+export default Home;
